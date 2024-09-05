@@ -112,7 +112,7 @@ def remove_hr_tags(html_content):
 
 
 def remove_all_tags(html_content):
-    if html_content.find("<") == -1:
+    if html_content.find("<") == -1 and html_content.find(">") == -1:
         return html_content
 
     try:
