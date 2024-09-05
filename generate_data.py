@@ -1,6 +1,8 @@
 import pyarrow as pa
 import pyarrow.parquet as pq
 import ujson
+import re
+from bs4 import BeautifulSoup
 
 
 def split_txt_cropus_to_chunk_data(
@@ -80,25 +82,49 @@ def gen_aplca_sft(origin_file, output_file):
 
 def gen_wiki(origin_file, output_file):
     lines = []
-    i = 0
     with open(origin_file, "r", encoding="utf-8") as f:
         for line in f:
             item = ujson.loads(line)
-            content = item["text"] + "<|im_end|>"
-            if 50 <= len(content) <= 500:
+            content = item["text"].replace('\n', '')
+            content = remove_all_tags(content)
+            if len(content) == 0:
+                print(item["id"])
+                continue
+            content = content + "<|im_end|>"
+            if 100 <= len(content) <= 512:
                 lines.append(content)
-                print(i)
-                i += 1
+                # print(item["id"])
 
     print(len(lines))
-    # chunk_data = split_txt_cropus_to_chunk_data(lines)
-    tb = pa.Table.from_arrays([pa.array(lines)], names=["text"])
+    tb = pa.Table.from_arrays(arrays=[pa.array(lines)], names=["text"])
     pq.write_table(
         table=tb,
         where=output_file,
         row_group_size=50000,
         data_page_size=50000,
     )
+
+
+def remove_hr_tags(html_content):
+    hr_pattern = re.compile(r'<hr[^>]*>', re.IGNORECASE)
+    cleaned_content = re.sub(hr_pattern, '', html_content)
+    return cleaned_content
+
+
+def remove_all_tags(html_content):
+    if html_content.find("<") == -1:
+        return html_content
+
+    try:
+        soup = BeautifulSoup(html_content, 'html.parser', from_encoding='utf-8')
+        for tag in soup.find_all():
+            tag.decompose()
+
+        return str(soup)
+    except Exception as e:
+        print(html_content)
+        print(str(e))
+        return ""
 
 
 def gen_alpaca_train_sft(output_file):
@@ -144,4 +170,4 @@ def gen_alpaca_train_sft(output_file):
 
 # gen_emotion_ds("../data/emotion.jsonl")
 # gen_alpaca_train_sft("../datasets/sft.parquet")
-gen_wiki("./raw_data/wikipedia-zh-cn-20240820.json", "./datasets/wiki.parquet")
+gen_wiki("./raw_data/wikipedia-zh-cn-20240820.json", "./datasets/wiki-zh-cn.parquet")
