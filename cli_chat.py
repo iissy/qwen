@@ -1,40 +1,23 @@
 import torch
-from transformers import GenerationConfig
-
 from transformers import (
-    Qwen2Tokenizer,
-    Qwen2ForCausalLM,
-)
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = Qwen2ForCausalLM.from_pretrained("./model_save/pre/checkpoint-250").to(device)
-tokenizer = Qwen2Tokenizer.from_pretrained("./model_save/pre/checkpoint-250")
-gen_config = GenerationConfig(
-    temperature=0.3,
-    top_k=20,
-    top_p=0.5,
-    do_sample=True,
-    num_beams=1,
-    repetition_penalty=1.1,
-    max_new_tokens=300,
-    eos_token_id=tokenizer.eos_token_id,
-    pad_token_id=tokenizer.pad_token_id,
+    AutoModelForCausalLM,
+    AutoTokenizer,
 )
 
 print("程序启动")
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model = AutoModelForCausalLM.from_pretrained("./model_save/pre", device_map=device)
+tokenizer = AutoTokenizer.from_pretrained("./model_save/pre")
+
 while True:
     print("我：", end="")
     text = input()
-
-    text = "你是一个助手 用户: {text} 回答: ".format(text=text)
-    tokend = tokenizer(text, add_special=False)
-    input_ids, attention_mask = torch.LongTensor([tokend.input_ids]).to(
-        device
-    ), torch.LongTensor([tokend.attention_mask]).to(device)
-    outputs = model.generate(
-        inputs=input_ids, attention_mask=attention_mask, generation_config=gen_config
-    )
-
-    outs = tokenizer.decode(outputs[0].cpu().numpy())
-    print("AI:" + outs.split("<|im_end|>")[0].split("回答: ")[1])
+    messages = [{"role": "user", "content": text}]
+    text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+    model_inputs = tokenizer([text], return_tensors="pt").to(device)
+    generated_ids = model.generate(model_inputs.input_ids, max_new_tokens=512, do_sample=True)
+    generated_ids = [output_ids[len(input_ids):] for input_ids, output_ids in
+                     zip(model_inputs.input_ids, generated_ids)]
+    response = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
+    print(response)

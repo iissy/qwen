@@ -2,3 +2,5 @@ transformers
 datasets
 accelerate
 tensorboard
+bs4
+ujson

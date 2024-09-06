@@ -170,4 +170,4 @@ def gen_alpaca_train_sft(output_file):
 
 # gen_emotion_ds("../data/emotion.jsonl")
 # gen_alpaca_train_sft("../datasets/sft.parquet")
-gen_wiki("./raw_data/wikipedia-zh-cn-20240820.json", "./datasets/wiki-zh-cn.parquet")
+gen_wiki("./raw_data/wikipedia-zh-cn-20240820.json", "./datasets/wiki-zh.parquet")
