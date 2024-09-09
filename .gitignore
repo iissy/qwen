@@ -163,3 +163,4 @@ cython_debug/
 pre/
 datasets/
 raw_data/
+Qwen2-0.5B-Instruct/
