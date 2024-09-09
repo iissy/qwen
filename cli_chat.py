@@ -8,10 +8,10 @@ print("程序启动")
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = AutoModelForCausalLM.from_pretrained(
-    "./model_save/pre/checkpoint-300",
+    "./model_save/pre",
     torch_dtype="auto",
     device_map="auto")
-tokenizer = AutoTokenizer.from_pretrained("./model_save/pre/checkpoint-300")
+tokenizer = AutoTokenizer.from_pretrained("./model_save/pre")
 
 while True:
     print("我：", end="")

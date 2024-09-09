@@ -80,26 +80,12 @@ print(f"QWen size: {model_size / 1000**2:.1f}M parameters")
 class MyTrainerCallback(TrainerCallback):
     log_cnt = 0
 
-    def on_log(
-        self,
-        args: TrainingArguments,
-        state: TrainerState,
-        control: TrainerControl,
-        **kwargs,
-    ):
-        # 在打印 n 次日志后清除cuda缓存，适合低显存设备，能防止OOM
+    def on_log(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
         self.log_cnt += 1
         if self.log_cnt % 2 == 0:
             torch.cuda.empty_cache()
 
-
-    def on_epoch_end(
-        self,
-        args: TrainingArguments,
-        state: TrainerState,
-        control: TrainerControl,
-        **kwargs,
-    ):
+    def on_epoch_end(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
         control.should_save = True
         return control
 
