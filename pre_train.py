@@ -15,7 +15,7 @@ from transformers import (
 from transformers.trainer_callback import TrainerControl, TrainerState
 
 TRAIN_FILES = [
-    './datasets/wiki.parquet',
+    './datasets/wiki-zh.parquet',
 ]
 
 EVAL_FILE = "./datasets/pretrain_eval_512_1w.parquet"
@@ -54,7 +54,6 @@ def token_to_id(samples: dict) -> dict:
     )
 
     input_ids = [np.array(item, dtype=map_dtype) for item in outputs["input_ids"]]
-
     return {"input_ids": input_ids}
 
 
