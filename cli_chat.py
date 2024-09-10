@@ -5,13 +5,13 @@ from transformers import (
 )
 
 print("程序启动")
-
+modelPath = "./model_save/pre"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = AutoModelForCausalLM.from_pretrained(
-    "./model_save/pre",
+    modelPath,
     torch_dtype="auto",
     device_map="auto")
-tokenizer = AutoTokenizer.from_pretrained("./model_save/pre")
+tokenizer = AutoTokenizer.from_pretrained(modelPath)
 
 while True:
     print("我：", end="")
