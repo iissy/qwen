@@ -90,10 +90,12 @@ def gen_wiki(origin_file, output_file):
                 continue
 
             content = remove_all_tags(content)
-            content = content + "<|im_end|>"
-            if 100 <= len(content) <= 512:
-                lines.append(content)
-                print(item["id"])
+            if len(content) <= 50:
+                continue
+
+            content = content[:1200]
+            lines.append(content)
+            print(item["id"])
 
     print(len(lines))
     tb = pa.Table.from_arrays(arrays=[pa.array(lines)], names=["text"])
