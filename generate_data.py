@@ -93,7 +93,7 @@ def gen_wiki(origin_file, output_file):
             if len(content) <= 50:
                 continue
 
-            content = content[:1200]
+            content = content[:1000]
             lines.append(content)
             print(item["id"])
 
