@@ -5,7 +5,7 @@ from transformers import (
 )
 
 print("程序启动")
-modelPath = "./model_save/pre"
+modelPath = "./model_save/pre/checkpoint-100"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = AutoModelForCausalLM.from_pretrained(
     modelPath,
