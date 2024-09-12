@@ -3,6 +3,7 @@ import pyarrow.parquet as pq
 import ujson
 import re
 from bs4 import BeautifulSoup
+from sympy import false
 
 
 def split_txt_cropus_to_chunk_data(
@@ -152,24 +153,25 @@ def gen_alpaca_train_sft(output_file):
     )
 
 
-# Pretrain using WIKI and baidu baike
-# gen_wiki_filter("../data/wikipedia-cn-20230720-filtered.json")
-# 这里的563w_baidubaike要记得解压. 原本download的是7z压缩文件》
-# gen_baike("/data/MINI_LLM_data/563w_baidubaike.json")
-# gen_bell()  # To generate the eval dataset
+def gen_bell(origin_file, output_file):
+    items = []
+    i = 0
+    with open(origin_file, "r", encoding="utf-8") as f:
+        for line in f:
+            item = ujson.loads(line.strip())
+            item["instruction"] = item["instruction"].strip()
+            item["input"] = item["input"].strip()
+            item["output"] = item["output"].strip()
+            items.append(item)
+            print(i, len(line))
+            i += 1
+            if i >= 150000:
+                break
+
+    print(len(items))
+    with open(output_file, 'w', encoding="utf-8") as f:
+        ujson.dump(items, f, indent=2, ensure_ascii=false)
 
 
-# 原本的gen_sky 需要复制多个，没办法读取一个文件夹. 新的gen_sky只需要输入文件夹和输出文件夹的路径即可。并且原本的也会自动修改为.parquet结尾.（喵德注释）
-# gen_sky_for_folder("/home/miaode/MINI_LLM/data/SkyPile-150B/data_folder","/home/miaode/MINI_LLM/datasets" )
-
-# 这个在readme 没有说清楚是要下载哪一个记得是self_cognition.json 。（喵德注释)
-# https://github.com/hiyouga/ChatGLM-Efficient-Tuning/blob/main/data/self_cognition.json
-# gen_aplca_sft("../data/alpaca_data_zh_51k.json","../datasets/aplca3.parquet")
-
-# gen_bell_sft("../../../datasets/train_2M_CN.json", "../datasets/bell3.parquet")
-
-# gen_mbvc("../datasets/oscar_202201.part_0000.jsonl","../datasets/mbvc1.parquet")
-
-# gen_emotion_ds("../data/emotion.jsonl")
-# gen_alpaca_train_sft("../datasets/sft.parquet")
-gen_wiki("./raw_data/wikipedia-zh-cn-20240820.json", "./datasets/wiki-zh.parquet")
+# gen_wiki("./raw_data/wikipedia-zh-cn-20240820.json", "./datasets/wiki-zh.parquet")
+gen_bell("./raw_data/train_2M_CN.json", "./datasets/train_2M_CN.json")
