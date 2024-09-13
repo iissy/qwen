@@ -33,7 +33,7 @@ class PretrainArguments:
     max_seq_len: int = 512
 
 
-def get_maped_dataset(tokenizer, max_seq_len, files, map_dtype) -> Dataset:
+def get_mapped_dataset(tokenizer, max_seq_len, files, dt) -> Dataset:
     dataset = load_dataset(path="parquet", data_files=files, split="train", cache_dir=".cache", keep_in_memory=False)
 
     def token_to_id(samples: dict) -> dict:
@@ -46,11 +46,11 @@ def get_maped_dataset(tokenizer, max_seq_len, files, map_dtype) -> Dataset:
             max_length=max_seq_len
         )
 
-        input_ids = [np.array(item, dtype=map_dtype) for item in outputs["input_ids"]]
+        input_ids = [np.array(item, dtype=dt) for item in outputs["input_ids"]]
         return {"input_ids": input_ids}
 
-    maped_dataset = dataset.map(token_to_id, batched=True, batch_size=1000, remove_columns=dataset.column_names, num_proc=24, keep_in_memory=False)
-    return maped_dataset
+    mapped_dataset = dataset.map(token_to_id, batched=True, batch_size=10000, remove_columns=dataset.column_names, num_proc=24, keep_in_memory=False)
+    return mapped_dataset
 
 
 class MyTrainerCallback(TrainerCallback):
@@ -75,10 +75,10 @@ def main():
 
     print(f"final vocab size: {vocab_size}")
 
-    map_dtype = np.uint16 if vocab_size < 65535 else np.uint32
+    dt = np.uint16 if vocab_size < 65535 else np.uint32
 
-    train_dataset = get_maped_dataset(tokenizer, pretrain_args.max_seq_len, pretrain_args.train_files, map_dtype)
-    eval_dataset = get_maped_dataset(tokenizer, pretrain_args.max_seq_len, pretrain_args.eval_file, map_dtype)
+    train_dataset = get_mapped_dataset(tokenizer, pretrain_args.max_seq_len, pretrain_args.train_files, dt)
+    eval_dataset = get_mapped_dataset(tokenizer, pretrain_args.max_seq_len, pretrain_args.eval_file, dt)
 
     # `mlm=False`表示要训练CLM模型，`mlm=True`表示要训练MLM模型
     data_collator = DataCollatorForLanguageModeling(tokenizer, mlm=False)
@@ -89,7 +89,7 @@ def main():
     model_size = sum(t.numel() for t in model.parameters())
     print(f"QWen size: {model_size / 1000 ** 2:.1f}M parameters")
 
-    my_trainer_callback = MyTrainerCallback()
+    trainer_callback = MyTrainerCallback()
     args = TrainingArguments(
         output_dir=pretrain_args.model_save_dir,
         per_device_train_batch_size=8,
@@ -121,7 +121,7 @@ def main():
         data_collator=data_collator,
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
-        callbacks=[my_trainer_callback],
+        callbacks=[trainer_callback],
     )
 
     # `resume_from_checkpoint=True`参数可以从上次保存的检查点继续训练
