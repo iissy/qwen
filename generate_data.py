@@ -92,12 +92,12 @@ def gen_wiki(origin_file, output_file):
 
             content = remove_all_tags(content)
             content = content + "<|im_end|>"
-            if len(content) < 100 or len(content) > 1024:
+            if len(content) < 100 or len(content) > 512:
                 continue
 
             lines.append(content)
             print(item["id"])
-            if len(lines) >= 100000:
+            if len(lines) >= 30000:
                 break
 
     print(len(lines))

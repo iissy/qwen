@@ -91,8 +91,8 @@ def main():
     trainer_callback = MyTrainerCallback()
     args = TrainingArguments(
         output_dir=pretrain_args.model_save_dir,
-        per_device_train_batch_size=4,
-        per_device_eval_batch_size=4,
+        per_device_train_batch_size=8,
+        per_device_eval_batch_size=8,
         gradient_accumulation_steps=8,
         num_train_epochs=1,
         weight_decay=0.1,
