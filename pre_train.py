@@ -30,10 +30,10 @@ class PretrainArguments:
     logs_dir: str = "./logs/"
     train_files: list = field(default_factory=lambda: TRAIN_FILES)
     eval_file: str = EVAL_FILE
-    max_seq_len: int = 512
+    max_seq_len: int = 1024
 
 
-def get_mapped_dataset(tokenizer, max_seq_len, files, dt) -> Dataset:
+def get_mapped_dataset(tokenizer, files, dt) -> Dataset:
     dataset = load_dataset(path="parquet", data_files=files, split="train", cache_dir=".cache", keep_in_memory=False)
 
     def token_to_id(samples: dict) -> dict:
@@ -42,14 +42,13 @@ def get_mapped_dataset(tokenizer, max_seq_len, files, dt) -> Dataset:
             batch_txt,
             padding=False,
             return_attention_mask=False,
-            truncation=True,
-            max_length=max_seq_len
+            truncation=False
         )
 
         input_ids = [np.array(item, dtype=dt) for item in outputs["input_ids"]]
         return {"input_ids": input_ids}
 
-    mapped_dataset = dataset.map(token_to_id, batched=True, batch_size=10000, remove_columns=dataset.column_names, num_proc=24, keep_in_memory=False)
+    mapped_dataset = dataset.map(token_to_id, batched=True, batch_size=10000, remove_columns=dataset.column_names, num_proc=8, keep_in_memory=False)
     return mapped_dataset
 
 
@@ -77,8 +76,8 @@ def main():
 
     dt = np.uint16 if vocab_size < 65535 else np.uint32
 
-    train_dataset = get_mapped_dataset(tokenizer, pretrain_args.max_seq_len, pretrain_args.train_files, dt)
-    eval_dataset = get_mapped_dataset(tokenizer, pretrain_args.max_seq_len, pretrain_args.eval_file, dt)
+    train_dataset = get_mapped_dataset(tokenizer, pretrain_args.train_files, dt)
+    eval_dataset = get_mapped_dataset(tokenizer, pretrain_args.eval_file, dt)
 
     # `mlm=False`表示要训练CLM模型，`mlm=True`表示要训练MLM模型
     data_collator = DataCollatorForLanguageModeling(tokenizer, mlm=False)
@@ -92,7 +91,7 @@ def main():
     trainer_callback = MyTrainerCallback()
     args = TrainingArguments(
         output_dir=pretrain_args.model_save_dir,
-        per_device_train_batch_size=8,
+        per_device_train_batch_size=4,
         per_device_eval_batch_size=4,
         gradient_accumulation_steps=8,
         num_train_epochs=1,

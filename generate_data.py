@@ -91,12 +91,14 @@ def gen_wiki(origin_file, output_file):
                 continue
 
             content = remove_all_tags(content)
-            if len(content) <= 50:
+            content = content + "<|im_end|>"
+            if len(content) < 100 or len(content) > 1024:
                 continue
 
-            content = content[:1000]
             lines.append(content)
             print(item["id"])
+            if len(lines) >= 100000:
+                break
 
     print(len(lines))
     tb = pa.Table.from_arrays(arrays=[pa.array(lines)], names=["text"])
@@ -173,5 +175,5 @@ def gen_bell(origin_file, output_file):
         ujson.dump(items, f, indent=2, ensure_ascii=false)
 
 
-# gen_wiki("./raw_data/wikipedia-zh-cn-20240820.json", "./datasets/wiki-zh.parquet")
-gen_bell("./raw_data/train_2M_CN.json", "./datasets/train_2M_CN.json")
+gen_wiki("./raw_data/wikipedia-zh-cn-20240820.json", "./datasets/wiki-zh.parquet")
+# gen_bell("./raw_data/train_2M_CN.json", "./datasets/train_2M_CN.json")

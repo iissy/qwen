@@ -4,7 +4,6 @@ from transformers import (
     AutoTokenizer,
 )
 
-print("程序启动")
 modelPath = "./model_save/pre"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = AutoModelForCausalLM.from_pretrained(
@@ -38,3 +37,4 @@ while True:
 
     response = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
     print(response)
+    print("\n")
